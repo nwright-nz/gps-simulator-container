@@ -1,0 +1,46 @@
+version: '2'
+services:
+  gps:
+    image: nwrightnz/gps-sim
+    environment:
+      BINARY_DATA_SERVER: http://<ADDRESS OF BINARY DATA SERVER>:7001/telemetry
+      DOCKER_TYPE: azure-docker
+      INSTANCE_PORT: 7000
+    links:
+    - binary-server  
+  db:
+    image: tutum/mongodb
+    environment:
+      AUTH: 'no'
+      MONGODB_DATABASE: gps-db
+    expose:
+     - "27017"
+     - "27018"
+    ports:
+     - "27017:27017"
+     - "27018:27018"
+  binary-server:
+    image: nwrightnz/gps-binary-server
+    ports:
+     - "7001:7001"
+    environment:
+      MONGODB_URL: mongodb://<DATABASE ADDRESS>:27017/gps-db
+      PORT: 7001
+      USE_ONLY_CACHE: "true" 
+    links:
+     - db
+  data-server:
+    image: nwrightnz/gps-data-server
+    ports:
+     - "7002:7002"
+    environment:
+      PORT: 7002
+      MONGODB_URL: mongodb://<DATABASE ADDRESS>:27017/gps-db
+    links:
+    - db
+  ui:
+    image: nwrightnz/gps-ui
+    ports:
+     - "7003:7003" 
+    environment:
+     PORT: 7003
